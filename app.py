@@ -1,118 +1,121 @@
+#import package yang diperlukan
 import numpy as np
 import pandas as pd
 import random as rd
 from random import randint
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt #untuk grafik
 
-knapsack_threshold = int(input('masukkan batas knapsack : '))
-number = int(input('Masukkan jumlah item barang : '))
-item_number = np.arange(1,number + 1)
-weight=[]
-value=[]
-for i in range(number):
-    x = int(input('masukkan bobot : '))
-    weight.append(x)
-    y = int(input('Masukkan value : '))
-    value.append(y)
-# weight = np.random.randint(1, 15, size = 10)
-# value = np.random.randint(10, 750, size = 10)
-# knapsack_threshold = 35    #Maximum weight that the bag of thief can hold
-print('The list is as follows:')
-print('Item No.   Weight   Value')
-for i in range(item_number.shape[0]):
-    print('{0}          {1}         {2}\n'.format(item_number[i], weight[i], value[i]))
+# masukan kapasitas tas
+max_tas = int(input('muatan maksimal tas : '))
+# masukan banyak barang tersedia
+n_barang = int(input('jumlah barang : '))
+# no urut barang
+barang_no = np.arange(1,n_barang + 1)
+berat=[]
+profit=[]
+for i in range(n_barang):
+    print("barang ke-",i+1)
+    x = int(input('masukkan bobot / berat barang  : '))
+    berat.append(x)
+    y = int(input('Masukkan value / profit barang  : '))
+    profit.append(y)
+print('list barang')
+print('No.barang   berat   profit')
+for i in range(barang_no.shape[0]):
+    print('{0}          {1}         {2}\n'.format(barang_no[i], berat[i], profit[i]))
 
-#population
-solutions_per_pop = 4
-pop_size = (solutions_per_pop, item_number.shape[0])
-print('Population size = {}'.format(pop_size))
-initial_population = np.random.randint(2, size = pop_size)
-initial_population = initial_population.astype(int)
-num_generations = 1000
-print('Initial population: \n{}'.format(initial_population))
+#pembentukakn populasi awal
+populasi = (int(input("masukan jumlah populasi : ")))
+ukuran_populasi = (populasi, barang_no.shape[0]) #ukuran matriks
+print('ukuran populasi = {}'.format(ukuran_populasi))
+populasi_awal = np.random.randint(2, size = ukuran_populasi)
+populasi_awal = populasi_awal.astype(int)
+jumlah_gen = 10
+print('populasi awal: \n{}'.format(populasi_awal))
 
-#fungsi fitness
-def cal_fitness(weight, value, population, threshold):
-    fitness = np.empty(population.shape[0])
-    for i in range(population.shape[0]):
-        S1 = np.sum(population[i] * value)
-        S2 = np.sum(population[i] * weight)
-        if S2 <= threshold:
-            fitness[i] = S1
+#fungsi untuk menghitung nilai fitness
+def get_fitness(berat,  profit, populasi, max_tas):
+    fitness = np.empty(populasi.shape[0])
+    for i in range(populasi.shape[0]):
+        profit_value = np.sum(populasi[i] * profit)
+        berat_value = np.sum(populasi[i] * berat)
+        if berat_value <= max_tas:
+            #jika berat kurang dari batas maksimal tas
+            fitness[i] = profit_value
         else :
             fitness[i] = 0
     return fitness.astype(int)
 
 #fungsi seleksi
-def selection(fitness, num_parents, population):
+def selection(fitness, no_parent, populasi):
     fitness = list(fitness)
-    parents = np.empty((num_parents, population.shape[1]))
-    for i in range(num_parents):
-        max_fitness_idx = np.where(fitness == np.max(fitness))
-        parents[i,:] = population[max_fitness_idx[0][0], :]
-        fitness[max_fitness_idx[0][0]] = -999999
-    return parents
+    parent = np.empty((no_parent, populasi.shape[1]))
+    for i in range(no_parent):
+        index_maxfitness = np.where(fitness == np.max(fitness)) #index fitness dengan nilai terbesar
+        parent[i,:] = populasi[index_maxfitness[0][0], :]
+        fitness[index_maxfitness[0][0]] = -999999
+    return parent
 
 #fungsi crossover
-def crossover(parents, num_offsprings):
-    offsprings = np.empty((num_offsprings, parents.shape[1]))
-    crossover_point = int(parents.shape[1]/2)
-    crossover_rate = 0.8
+def crossover(parent, no_offspring):
+    offspring = np.empty((no_offspring, parent.shape[1]))
+    titik_cross = int(parent.shape[1]/2)
+    rate = 0.8
     i=0
-    while (parents.shape[0] < num_offsprings):
-        parent1_index = i%parents.shape[0]
-        parent2_index = (i+1)%parents.shape[0]
+    while (parent.shape[0] < no_offspring):
+        index_parent1 = i%parent.shape[0]
+        index_parent2 = (i+1)%parent.shape[0]
         x = rd.random()
-        if x > crossover_rate:
+        if x > rate:
             continue
-        parent1_index = i%parents.shape[0]
-        parent2_index = (i+1)%parents.shape[0]
-        offsprings[i,0:crossover_point] = parents[parent1_index,0:crossover_point]
-        offsprings[i,crossover_point:] = parents[parent2_index,crossover_point:]
+        index_parent1 = i%parent.shape[0]
+        index_parent2 = (i+1)%parent.shape[0]
+        offspring[i,0:titik_cross] = parent[index_parent1,0:titik_cross]
+        offspring[i,titik_cross:] = parent[index_parent2,titik_cross:]
         i=+1
-    return offsprings
+    return offspring
 
 #fungsi mutasi
-def mutation(offsprings):
-    mutants = np.empty((offsprings.shape))
-    mutation_rate = 0.4
-    for i in range(mutants.shape[0]):
-        random_value = rd.random()
-        mutants[i,:] = offsprings[i,:]
-        if random_value > mutation_rate:
+def mutation(offspring):
+    mutant = np.empty((offspring.shape))
+    rate = 0.4
+    for i in range(mutant.shape[0]):
+        nilai_random = rd.random()
+        mutant[i,:] = offspring[i,:]
+        if nilai_random > rate:
             continue
-        int_random_value = randint(0,offsprings.shape[1]-1)
-        if mutants[i,int_random_value] == 0 :
-            mutants[i,int_random_value] = 1
+        new_nilai_random = randint(0,offspring.shape[1]-1)
+        if mutant[i,new_nilai_random] == 0 :
+            mutant[i,new_nilai_random] = 1
         else :
-            mutants[i,int_random_value] = 0
-    return mutants
+            mutant[i,new_nilai_random] = 0
+    return mutant
 
 #fungsi optimize
-def optimize(weight, value, population, pop_size, num_generations, threshold):
-    parameters, fitness_history = [], []
-    num_parents = int(pop_size[0] / 2)
-    num_offsprings = pop_size[0] - num_parents
-    for i in range(num_generations):
-        fitness = cal_fitness(weight, value, population, threshold)
-        fitness_history.append(fitness)
-        parents = selection(fitness, num_parents, population)
-        offsprings = crossover(parents, num_offsprings)
-        mutants = mutation(offsprings)
-        population[0:parents.shape[0], :] = parents
-        population[parents.shape[0]:, :] = mutants
+def optimize(berat, profit, populasi, ukuran_populasi, no_generasi, max_tas):
+    parameter, catatan_fitness = [], []
+    no_parent = int(ukuran_populasi[0] / 2)
+    no_offspring = ukuran_populasi[0] - no_parent
+    for i in range(no_generasi):
+        fitness = get_fitness(berat, profit, populasi, max_tas)
+        catatan_fitness.append(fitness)
+        parent = selection(fitness, no_parent, populasi)
+        offspring = crossover(parent, no_offspring)
+        mutant = mutation(offspring)
+        populasi[0:parent.shape[0], :] = parent
+        populasi[parent.shape[0]:, :] = mutant
 
-    print('Last generation: \n{}\n'.format(population))
-    fitness_last_gen = cal_fitness(weight, value, population, threshold)
-    print('Fitness of the last generation: \n{}\n'.format(fitness_last_gen))
-    max_fitness = np.where(fitness_last_gen == np.max(fitness_last_gen))
-    parameters.append(population[max_fitness[0][0], :])
-    return parameters, fitness_history
+    print('generasi terakhir: \n{}\n'.format(populasi))
+    fitness_gen_terakhir = get_fitness(berat, profit, populasi, max_tas)
+    print('fitness gen terakhir: \n{}\n'.format(fitness_gen_terakhir))
+    max_fitness = np.where(fitness_gen_terakhir == np.max(fitness_gen_terakhir))
+    parameter.append(populasi[max_fitness[0][0], :])
+    return parameter, catatan_fitness
 
 #main
-parameters, fitness_history = optimize(weight, value, initial_population, pop_size, num_generations, knapsack_threshold)
-print('The optimized parameters for the given inputs are: \n{}'.format(parameters))
-selected_items = item_number * parameters
+parameter, fitness_history = optimize(berat, profit, populasi_awal, ukuran_populasi, jumlah_gen, max_tas)
+print('The optimized parameters for the given inputs are: \n{}'.format(parameter))
+selected_items = barang_no * parameter
 print('\nSelected items that will maximize the knapsack without breaking it:')
 for i in range(selected_items.shape[1]):
   if selected_items[0][i] != 0:
@@ -122,8 +125,8 @@ for i in range(selected_items.shape[1]):
 #plot
 fitness_history_mean = [np.mean(fitness) for fitness in fitness_history]
 fitness_history_max = [np.max(fitness) for fitness in fitness_history]
-plt.plot(list(range(num_generations)), fitness_history_mean, label = 'Mean Fitness')
-plt.plot(list(range(num_generations)), fitness_history_max, label = 'Max Fitness')
+plt.plot(list(range(jumlah_gen)), fitness_history_mean, label = 'Mean Fitness')
+plt.plot(list(range(jumlah_gen)), fitness_history_max, label = 'Max Fitness')
 plt.legend()
 plt.title('Fitness through the generations')
 plt.xlabel('Generations')
