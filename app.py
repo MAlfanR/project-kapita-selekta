@@ -25,12 +25,12 @@ for i in range(barang_no.shape[0]):
     print('{0}          {1}         {2}\n'.format(barang_no[i], berat[i], profit[i]))
 
 #pembentukakn populasi awal
-populasi = (int(input("masukan jumlah populasi : ")))
+populasi = n_barang *2
 ukuran_populasi = (populasi, barang_no.shape[0]) #ukuran matriks
 print('ukuran populasi = {}'.format(ukuran_populasi))
 populasi_awal = np.random.randint(2, size = ukuran_populasi)
 populasi_awal = populasi_awal.astype(int)
-jumlah_gen = 10
+jumlah_gen = 100
 print('populasi awal: \n{}'.format(populasi_awal))
 
 #fungsi untuk menghitung nilai fitness
@@ -114,9 +114,9 @@ def optimize(berat, profit, populasi, ukuran_populasi, no_generasi, max_tas):
 
 #main
 parameter, fitness_history = optimize(berat, profit, populasi_awal, ukuran_populasi, jumlah_gen, max_tas)
-print('The optimized parameters for the given inputs are: \n{}'.format(parameter))
+print('Optimized parameter  \n{}'.format(parameter))
 selected_items = barang_no * parameter
-print('\nSelected items that will maximize the knapsack without breaking it:')
+print('\nItem terpilih untuk dimasukkan ke dalam tas : ')
 for i in range(selected_items.shape[1]):
   if selected_items[0][i] != 0:
      print('{}\n'.format(selected_items[0][i]))
